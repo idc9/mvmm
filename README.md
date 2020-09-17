@@ -87,10 +87,10 @@ idc9@cornell.edu.
 
 The source code is located on github: https://github.com/idc9/mvmm
 
-.. Testing
-.. ^^^^^^^
+## Testing
 
-.. Testing is done using `nose`.
+
+Testing is done using `nose`.
 
 
 ## Contributing
@@ -102,9 +102,13 @@ bug fixes, spelling errors, new features, etc.
 ## Citing
 
 @article{carmichael2020learning,
+
 title={Learning sparsity and block diagonal structure in multi-view mixture models},
+
 author={Carmichael, Iain},
+
 journal={arXiv preprint arXiv: TODO},
+
 year={2020}
 }
 
