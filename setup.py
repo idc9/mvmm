@@ -19,7 +19,6 @@ install_requires = ['numpy',
                     'networkx',
                     'statsmodels',
                     'cvxpy'
-                    'textwrap'
                     ]
 
 
