@@ -76,9 +76,9 @@ D_est = mvmm.final_.bd_weights_
 bd_summary, D_est_bd_perm = community_summary(D_est,
                                               zero_thresh=mvmm.final_.zero_thresh)
 # Estimated D matrix
-plt.figure(figsize=(4, 4))
+plt.figure(figsize=(8, 8))
 sns.heatmap(D_est_bd_perm.T,  # transpose so the first view is on the rows
-            annot=False, cmap='Blues', vmin=0, linewidths=.2, cbar=True,
+            annot=True, cmap='Blues', vmin=0, linewidths=.2, cbar=False,
             mask=D_est_bd_perm.T == 0)
 plt.xlabel("First view clusters")
 plt.ylabel("Second view clusters")
