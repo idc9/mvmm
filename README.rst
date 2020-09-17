@@ -51,6 +51,7 @@ First we sample data from a two view data set where Pi is block diagonal matrix 
 
 
 Next we fit the block diagonally constrained MVMM
+
 .. code:: python
 
     # spcify view spcific models
