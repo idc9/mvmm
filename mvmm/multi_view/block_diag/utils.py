@@ -84,7 +84,7 @@ def get_row_col_sum_mat(shape):
     return S
 
 
-def get_VdV_mat(V, w=None, trim_od_constrs=False):
+def get_VdV_mat(V, trim_od_constrs=False):
     """
     For a vector d gets the linear transform corresponding to
     d --> V^T diag(d) V
@@ -96,6 +96,9 @@ def get_VdV_mat(V, w=None, trim_od_constrs=False):
     V: array-like, (n, K)
         The matrix.
 
+    trim_od_constrs: bool
+        Replace the linear equality constraints for the off diagonal terms with an equivalent, but potentially smaller matrix.
+
     Output
     ------
     diag_mat: array-like, (K, )
@@ -104,10 +107,6 @@ def get_VdV_mat(V, w=None, trim_od_constrs=False):
         The upper trianglar entries in row major order.
     """
     d, K = V.shape
-
-    if w is not None:
-        # TODO
-        raise NotImplementedError
 
     # matrix corresponding to the linear constraints on the diagonal
     diag_mat = V.T ** 2
