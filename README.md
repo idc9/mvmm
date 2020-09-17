@@ -101,15 +101,11 @@ bug fixes, spelling errors, new features, etc.
 
 ## Citing
 
-@article{carmichael2020learning,
-
-title={Learning sparsity and block diagonal structure in multi-view mixture models},
-
-author={Carmichael, Iain},
-
-journal={arXiv preprint arXiv: TODO},
-
-year={2020}
+@article{carmichael2020learning,<br />
+title={Learning sparsity and block diagonal structure in multi-view mixture models},<br />
+author={Carmichael, Iain},<br />
+journal={arXiv preprint arXiv: TODO},<br />
+year={2020}<br />
 }
 
 # References
