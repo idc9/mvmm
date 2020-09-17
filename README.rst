@@ -108,13 +108,9 @@ Citing
 ^^^^^^
 
 @article{carmichael2020learning,
-
   title={Learning sparsity and block diagonal structure in multi-view mixture models},
-
   author={Carmichael, Iain},
-
   journal={arXiv preprint arXiv: TODO},
-
   year={2020}
 }
 
