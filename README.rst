@@ -73,7 +73,8 @@ Next we fit the block diagonally constrained MVMM
 Plot the block diagonal weights matrix stored in mvmm.final_.bd_weights_
 
 .. image:: doc/figures/D_est.png
-
+    :width: 512
+    :heigh: 512
 
 
 For more example code see `these example notebooks`_. If the notebooks aren't loading on github you can copy/paste the notebook url into https://nbviewer.jupyter.org/.
@@ -107,9 +108,13 @@ Citing
 ^^^^^^
 
 @article{carmichael2020learning,
+
   title={Learning sparsity and block diagonal structure in multi-view mixture models},
+
   author={Carmichael, Iain},
+
   journal={arXiv preprint arXiv: TODO},
+
   year={2020}
 }
 
