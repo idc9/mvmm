@@ -24,6 +24,66 @@ def get_cp_problem_sym_lap(Gamma,
                            exclude_off_diag=False,
                            exclude_vdv_constr=False,
                            obj_mult=1):
+    """
+    Sets up the bd_weights_ updatefor the symmetric Laplacian using cvxpy.
+    This is Problem (41) from (Carmichael, 2020).
+
+    min_D - sum_{k1, k2} Gamma_{k1, k2} log(epsilon + D_{k1, k2}) +
+        alpha * <D, M(eig_var, weights) >
+
+    s.t. sum_{k1, k2} D_{k1, k1} = 1 - np.product(D.shape) * epsilon
+
+    eig_var.T diag(deg(A_bp(D))) = I_B
+
+
+    Optional constraint: deg(A_bp(D)) >= eta
+
+    Parameters
+    ----------
+    Gamma:
+        The coefficients of the log terms.
+
+    eig_var:
+        Current value of the eigenvector variable.
+
+    epsilon:
+        epsilon
+
+    B:
+        The number of eigenvalues to penalize.
+
+    alpha:
+        The spectral penalty weight.
+
+    eta: None, float
+        (Optional) An optional lower bound on the degrees.
+
+    weights: None, array-like, (B, )
+        Weights to put on the eigenvalues.
+
+    init_val:
+        Guess for the initial value. Note the ECOS solver does not currently
+        accept inital guesses.
+
+    trim_od_constrs: bool
+        Improves numerical performace by shrinking the number of linear equality constraints. Replace the linear equality constraints of the off diagonal terms in the VDV=I constraint with an equivalent, but potentially smaller matrix.
+
+    remove_redundant_contr: bool
+        Improves numerical performace by shrinking the number of linear equality constraints. Remove all redundant linear equality constraints.
+        Some solvers really struggle without this step.
+
+    remove_const_cols: bool
+        Improves numerical performace by shrinking the number of linear equality constraints. Drop columns of eig_var that are constants.
+
+    exclude_off_diag: bool
+        Exclude the constraints corresponding to the off diagonal terms of the VDV constraint. This changes the problem, but can lead to faster, approximate solutions.
+
+    exclude_vdv_constr: bool
+        Ignore the VDV=I constraints entirely. This changes the problem, but can lead to faster, approximate solutions.
+
+    obj_mult: float
+        Multiply the objective function by a constant. This does not change the problem, but can help some solvers find a solution.
+    """
 
     shape = Gamma.shape
     var = cp.Variable(shape=np.product(shape), pos=True)
@@ -72,23 +132,6 @@ def get_cp_problem_sym_lap(Gamma,
         S = get_row_col_sum_mat(shape)
         S_rhs = eta * np.ones(sum(shape))
         constraints.append(S @ var >= S_rhs)
-
-    # TODO-debug
-    # print('subprob data, eps_tilde', prob_data['eps_tilde'])
-
-    # TODO-DEBUG: delete this
-    # zero_mask = Gamma_vec < 1e-6
-    # constraints.append(D[zero_mask] == 0)
-
-    # TODO-DEBUG: delete
-    # print('-----------')
-    # print('Gamma', Gamma_vec.min(), Gamma_vec.max())
-    # print('alpha', alpha)
-    # print('lin_coef', lin_coef.min(), lin_coef.max())
-    # print('-----------')
-
-    # TODO-DEBUG: delete
-    # constraints = [cp.sum(D) == eps_tilde]
 
     return var, objective, constraints
 
@@ -212,7 +255,6 @@ def get_lin_constrs(V, shape,
     V^T diag(deg(A_bp(X))) V = I_K
 
     lin_constr_mat @ vec(X) = lin_constr_rhs
-
 
 
     n_diag_constr = n_components
