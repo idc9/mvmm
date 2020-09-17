@@ -176,7 +176,7 @@ def unit_intval_logspace(num=50, stop=-2, include_zero=True):
                        endpoint=False)[1:]
 
     if include_zero:
-        vals = np.concatenate([[0.0], vals])
+        vals = np.concatenate([[0.0], vals[:-1]])
 
     return vals
 
