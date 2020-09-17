@@ -12,14 +12,12 @@ from mvmm.multi_view.MVMM import MVMM
 from mvmm.utils import get_seeds
 from mvmm.multi_view.block_diag.utils import asc_sort
 from mvmm.linalg_utils import eigh_wrapper
-from mvmm.opt_utils import solve_problem_cp_backups, solve_problem_cp
+from mvmm.opt_utils import solve_problem_cp
 from mvmm.multi_view.block_diag.graph.linalg import geigh_sym_laplacian_bp,\
     get_unnorm_laplacian_bp
 from mvmm.multi_view.block_diag.graph.bipt_community import community_summary,\
     get_nonzero_block_mask
 
-from mvmm.multi_view.block_diag.sub_prob_fixed_zeros import \
-    get_cp_prob_fixed_zeros
 from mvmm.multi_view.block_diag.sub_prob_cp_sym_lap import \
     get_cp_problem_sym_lap
 from mvmm.multi_view.block_diag.sub_prob_cp_un_lap import \
@@ -186,7 +184,33 @@ class BlockDiagMVMM(MVMM):
 
         return init_params
 
-    def get_eval_pen_guess(self, X, c=1.0, use_bipt_sp=True, K='default'):
+    def get_eval_pen_guess(self, X, use_bipt_sp=True, K='default', c=1.0):
+        """
+        Guesses the initial spectral penalty from the current value of bd_weights_ and the approximation of the M-step solution discussed in Section D. The goal is to get the rough scale of the penalty value where entries of bd_weights_ will start to be killed. It is better to err on the lower end because the spectral penalty will be increased if not enough entries have been zeroed.
+
+        We provide two methods to make this guess. Note that having a rough initial estimate of bd_weights_ will make this guess work better.
+
+        Method 1: kill the median
+            Using the approximation in proposition D.1, compute the penalty value such that the median entry of bd_weights_ would be zeroed out. The multiply this value by a small constant c.
+
+        Method 2: bipartite spentral clustering
+            Run bipartite spentral clustering on the current guess of bd_weights_ to roughly estimate the support of the blocks assuming K blocks. Take the max value of the entries in the complement of the estimated support of the blocks. Then multply this value by a small constant c.
+
+        Parameters
+        ----------
+        X:
+            The observed data.
+
+        use_bipt_sp: bool
+            Whether to use the bipartite spentral clustering method or kill the median method.
+
+        K: 'defualt', int
+            How many blocks to use for bipartite spentral clustering.
+            This defaults to n_blocks, but you can specify a different value e.g. K=2 might be a reasonable idea.
+
+        c: float
+            The small contant to multiply by.
+        """
         e_out = self._e_step(X)
 
         # log coefficient
@@ -226,7 +250,10 @@ class BlockDiagMVMM(MVMM):
         return c * default
 
     def _initialize_eval_pen(self, X):
-        if self.eval_pen_base == 'guess_from_init':
+        if self.n_blocks == 1:
+            self.eval_pen_ = 0.0
+
+        elif self.eval_pen_base == 'guess_from_init':
 
             default = \
                 self.get_eval_pen_guess(X,
@@ -234,8 +261,8 @@ class BlockDiagMVMM(MVMM):
                                         use_bipt_sp=self.init_pen_use_bipt_sp,
                                         K=self.init_pen_K)
 
-            # if self.verbosity >= 1:
-            print('default_lap_pen_base', default)
+            if self.verbosity >= 1:
+                print('default_lap_pen_base', default)
             self.eval_pen_ = default
 
         else:
@@ -243,11 +270,17 @@ class BlockDiagMVMM(MVMM):
 
     @property
     def epsilon(self):
+        """
+        The value of epsilon.
+        """
         assert 0 < self.rel_epsilon and self.rel_epsilon < 1
         return self.rel_epsilon / np.product(self.n_view_components)
 
     @property
     def epsilon_tilde(self):
+        """
+        The normalization for bd_weights_ i.e. bd_weights_.sum() == epsilon_tilde
+        """
         return 1 - np.product(self.n_view_components) * self.epsilon
 
     @property
@@ -261,6 +294,9 @@ class BlockDiagMVMM(MVMM):
             return None
 
     def update_eval_pen(self, increase=True):
+        """
+        Updates the eigenvalue penalty value e.g. increasing it if we don't have enough blocks.
+        """
         if increase:
             new_eval_pen = self.eval_pen_ * self.eval_pen_incr
         else:
@@ -319,7 +355,7 @@ class BlockDiagMVMM(MVMM):
         best_opt_data['init_success'] = init_success
 
         # warn about wrong number of blocks
-        if self.n_blocks is not None and \
+        if self.n_blocks is not None and self.n_blocks != 1 and\
                 (not best_opt_data['n_blocks_est'] == self.n_blocks):
 
             warn('Eigenvalue penalty did not successfuly enforce'
@@ -348,7 +384,12 @@ class BlockDiagMVMM(MVMM):
         self._initialize_eval_pen(X=X)
         eval_pen_init = deepcopy(self.eval_pen_)
 
-        for t in range(self.n_pen_tries):
+        if self.n_blocks == 1:
+            _n_pen_tries = 1
+        else:
+            _n_pen_tries = self.n_pen_tries
+
+        for t in range(_n_pen_tries):
 
             if self.verbosity >= 1:
                 time = datetime.now().strftime("%H:%M:%S")
@@ -407,7 +448,8 @@ class BlockDiagMVMM(MVMM):
                     'n_blocks_est': n_blocks_est}
 
         # fine tune with fixed block diagonal structure
-        if self.fine_tune_n_steps is not None and success:
+        if self.fine_tune_n_steps is not None and success \
+                and self.n_blocks != 1:
 
             # re-set parameters
             max_n_steps = deepcopy(self.max_n_steps)
@@ -441,6 +483,9 @@ class BlockDiagMVMM(MVMM):
         return params, opt_data
 
     def compute_tracking_data(self, X, E_out=None):
+        """
+        Optimization history to keep track of.
+        """
 
         out = {}
 
@@ -458,7 +503,7 @@ class BlockDiagMVMM(MVMM):
 
         # if we are fine tuning with a fixed zero mask the loss function
         # is just the observed negative log likelihood
-        if self.__mode == 'fine_tune_bd':
+        if self.__mode == 'fine_tune_bd' or self.n_blocks == 1:
             out['loss_val'] = out['obs_nll']
             return out
 
@@ -541,7 +586,7 @@ class BlockDiagMVMM(MVMM):
             B = len(self.eval_weights)
 
         assert self.__mode in ['lap_pen', 'fine_tune_bd']
-        if self.__mode == 'lap_pen':
+        if self.__mode == 'lap_pen' and self.n_blocks != 1:
 
             if self.lap == 'sym':
 
@@ -556,7 +601,7 @@ class BlockDiagMVMM(MVMM):
                 eig_var = all_evecs[:, -B:]
                 evals = all_evals[-B:]
 
-        if self.__mode == 'fine_tune_bd':
+        else:  # if self.__mode == 'fine_tune_bd':
             evals = None
             eig_var = None
 
@@ -570,7 +615,12 @@ class BlockDiagMVMM(MVMM):
 
         view_params = self._m_step_clust_params(X=X, log_resp=log_resp)
 
-        if self.__mode == 'lap_pen':
+        if self.n_blocks == 1:
+            weights = \
+                self._m_step_weights_fixed_zeros(X=X, log_resp=log_resp,
+                                                 zero_mask=None)
+
+        elif self.__mode == 'lap_pen':
             eig_var = E_out['eig_var']
             weights = self._m_step_weights_lap_pen(X=X, log_resp=log_resp,
                                                    eig_var=eig_var)
@@ -583,6 +633,9 @@ class BlockDiagMVMM(MVMM):
         return {'views': view_params, 'bd_weights': weights}
 
     def _m_step_weights_lap_pen(self, X, log_resp, eig_var):
+        """
+        M-step with the spectral penalty.
+        """
 
         # get log coefficient for bd_weights update
         n_samples = log_resp.shape[0]
@@ -595,7 +648,6 @@ class BlockDiagMVMM(MVMM):
         # Solve problem #
         #################
 
-        # TODO:
         if self.n_blocks is not None:
             B = self.n_blocks
         else:
@@ -706,7 +758,21 @@ class BlockDiagMVMM(MVMM):
 
         return bd_weights_new
 
-    def _m_step_weights_fixed_zeros(self, X, log_resp, zero_mask):
+    def _m_step_weights_fixed_zeros(self, X, log_resp, zero_mask=None):
+        """
+        M-step without spectral penalty when certain elements are constrained
+        to be zero.
+
+        Parameters
+        ----------
+        X:
+            The observed data.
+
+        log_resp:
+
+        zero_mask: None, array-like, same shape as bd_weights_
+            (Optional) The True/False array of elements that are constrained to be zero.
+        """
         # get log coefficient for bd_weights update
         n_samples = log_resp.shape[0]
         resp = np.exp(log_resp)
@@ -715,32 +781,11 @@ class BlockDiagMVMM(MVMM):
         Gamma = a.reshape(*self.n_view_components)
         Gamma = Gamma / Gamma.sum()
 
-        # setup CVXPY problem
+        # make sure terms that should be zero are zero
+        if zero_mask is not None:
+            Gamma[zero_mask] = 0.0
 
-        cp_bd_var, objective, constraints = \
-            get_cp_prob_fixed_zeros(Gamma=Gamma,
-                                    zero_mask=zero_mask,
-                                    epsilon=self.epsilon)
-
-        # solve cvxpy problem form bd_weights
-        cp_kws_backups = [{'solver': 'ECOS', 'max_iters': 200},
-                          {'solver': 'SCS'}]
-
-        try:
-            bd_weights_new, opt_val, prob = \
-                solve_problem_cp_backups(cp_kws_backups=cp_kws_backups,
-                                         var=cp_bd_var,
-                                         objective=objective,
-                                         constraints=constraints,
-                                         verbosity=self.verbosity - 1)
-
-            bd_weights_new = bd_weights_new.reshape(self.bd_weights_.shape)
-
-        except SolverError:
-            if self.verbosity >= 1:
-                warn('CVXPY solvers failed for fixed zeros;'
-                     'resorting to backup.')
-            bd_weights_new = Gamma
+        bd_weights_new = np.clip(Gamma - self.epsilon, a_min=0.0, a_max=np.inf)
 
         # ensure proper normalization that can be lost for numerical reasons
         # this seems to occasionally cause issues
