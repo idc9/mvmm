@@ -55,6 +55,9 @@ class LogPenMVMM(MaskedMVMM):
         nk = resp.sum(axis=0) + 10 * np.finfo(resp.dtype).eps
         a = nk / n_samples  # normalize so sum(a) == 1
 
+        if self.pen is None:
+            return a
+
         # compute soft thresholding operation
         a_thresh, idxs_dropped = soft_thresh(a, pen=self.pen)
 
@@ -91,9 +94,12 @@ class LogPenMVMM(MaskedMVMM):
 
         out['n_zeroed_comps'] = deepcopy(self.n_zeroed_comps_)
 
-        out['log_pen'] = self.pen * \
-            (np.log(self.delta + self.weights_).sum() +
-             np.log(self.delta) * self.n_zeroed_comps_)
+        if self.pen is not None:
+            out['log_pen'] = self.pen * \
+                (np.log(self.delta + self.weights_).sum() +
+                 np.log(self.delta) * self.n_zeroed_comps_)
+        else:
+            out['log_pen'] = 0
 
         out['loss_val'] = out['obs_nll'] + out['log_pen']
 

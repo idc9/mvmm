@@ -127,16 +127,58 @@ def get_n_comp(Pi):
     return n_comp_tot, n_view_components
 
 
-def unit_intval_linspace(num=50):
-    return np.linspace(start=0, stop=1, num=num + 1, endpoint=False)[1:]
+def unit_intval_linspace(num=50, include_zero=True):
+    """
+    Linearly spaced points on the unit interval either [0, 1) or (0, 1)
+
+    Parameters
+    ----------
+    num: int
+        Number of points
+
+    include_zero: bool
+        Whether or not to include 0.
+    """
+    if include_zero:
+        return np.linspace(start=0, stop=1, num=num, endpoint=False)
+    else:
+        return np.linspace(start=0, stop=1, num=num + 1, endpoint=False)[1:]
 
 
-def unit_intval_polyspace(num=50, deg=2):
-    return unit_intval_linspace(num=num) ** deg
+def unit_intval_polyspace(num=50, deg=2, include_zero=True):
+    """
+    Polynomially spaced points on the unit interval.
+
+    Parameters
+    ----------
+    num: int
+        Number of points
+
+    include_zero: bool
+        Whether or not to include 0.
+    """
+    return unit_intval_linspace(num=num, include_zero=include_zero) ** deg
 
 
-def unit_intval_logspace(num=50, stop=-2):
-    return np.logspace(start=stop, stop=0, num=num + 1, endpoint=False)[1:]
+def unit_intval_logspace(num=50, stop=-2, include_zero=True):
+    """
+    Log-spaced points on the unit interval.
+
+    Parameters
+    ----------
+    num: int
+        Number of points
+
+    include_zero: bool
+        Whether or not to include 0.
+    """
+    vals = np.logspace(start=stop, stop=0, num=num + 1,
+                       endpoint=False)[1:]
+
+    if include_zero:
+        vals = np.concatenate([[0.0], vals])
+
+    return vals
 
 
 def linspace_zero_to(stop=1, num=50):
@@ -164,4 +206,3 @@ def expspace_zero_to(stop=1, num=50, base=10):
     vals = base ** vals
     vals = stop * vals / max(vals)
     return vals
-
