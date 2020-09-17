@@ -384,7 +384,7 @@ class BlockDiagMVMM(MVMM):
         self._initialize_eval_pen(X=X)
         eval_pen_init = deepcopy(self.eval_pen_)
 
-        if self.n_blocks == 1:
+        if self.n_blocks is None or self.n_blocks == 1:
             _n_pen_tries = 1
         else:
             _n_pen_tries = self.n_pen_tries
