@@ -22,9 +22,7 @@ python setup.py install
 
 ## Example
 
-The below example fits a two view, block diagonal multi-view mixture model and performs model selection using BIC.
-
-First we sample data from a two view data set where Pi is block diagonal matrix with 5 2x2 blocks.
+The below example fits a two view, block diagonal multi-view mixture model and performs model selection using BIC. First we sample data from a two view data set where Pi is block diagonal matrix with 5 2x2 blocks.
 
 
 ```python
@@ -51,7 +49,7 @@ view_data, Y_true = sample_gmm(view_params, Pi_true, n_samples=500,
 
 ![](doc/figures/obs_data_and_true_pi.png)
 
-Next we fit the block diagonally constrained MVMM
+Next we fit the block diagonally constrained MVMM.
 
 ```python
 # spcify view spcific models
@@ -70,7 +68,7 @@ mvmm = TwoStage(base_start=base_start, base_final=base_final,
 mvmm.fit(view_data)
 ```
 
-Plot the block diagonal weights matrix stored in mvmm.final_.bd_weights_
+Finally, we plot the block diagonal weights matrix stored in `mvmm.final_.bd_weights_`.
 
 
 <img src="doc/figures/D_est.png" width="512" height="512">
