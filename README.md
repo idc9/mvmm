@@ -2,10 +2,12 @@
 
 **author**: [Iain Carmichael](https://idc9.github.io/)
 
+This package implements the multi-view clustering algorithms presented in (Carmichael, 2020). The multi-view data setting means a fixed set of observations (e.g. patients) and multiple sets of variables (e.g. clinical as well as genomic features). The multi-view mixture model (MVMM) is a parametric clustering model (Bickel and Scheffer, 2004) based on two assumptions:
 
-mvmm provides several algorithms for learning multi-view mixture models (Bickel and Scheffer, 2004; Carmichael, 2020). In this model, the structure of the "cluster membership matrix" (Pi from Carmichael, 2020) captures how information is shared between the data views. This package focuses on estimating the sparity structure of Pi using the log penalized MVMM or the block diagonally constrained MVMM.
+1. Marginally, each view follows a mixture model i.e. there are V sets of clusters for a V view dataset.
+2. The views are independent given the marginal view cluster memberships.
 
-Details of these methods can be found in Learning sparsity and block diagonal structure in multi-view mixture models (Link comming soon!)
+In this model, the "cluster membership probability matrix" (Pi from Carmichael, 2020) captures how information is shared between the data views (see figures below). This package provides algorithms to learn a MVMM while estimating the sparsity structure of the Pi matrix. These algorithms include the log penalized MVMM for arbitrary sparsity structures and the block diagonally constrained MVMM. Details of these methods can be found in Learning sparsity and block diagonal structure in multi-view mixture models (Link coming soon!)
 
 # Installation
 
