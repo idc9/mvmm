@@ -15,6 +15,47 @@ def get_cp_problem_un_lap(Gamma,
                           weights=None,
                           init_val=None,
                           obj_mult=1):
+    """
+    Sets up the bd_weights_ update for the unnormalized Laplacian using cvxpy.
+
+    min_D - sum_{k1, k2} Gamma_{k1, k2} log(epsilon + D_{k1, k2}) +
+        alpha * <D, M(eig_var, weights) >
+
+    s.t. sum_{k1, k2} D_{k1, k1} = 1 - np.product(D.shape) * epsilon
+
+    Optional constraint: deg(A_bp(D)) >= eta
+
+    Parameters
+    ----------
+    Gamma:
+        The coefficients of the log terms.
+
+    eig_var:
+        Current value of the eigenvector variable.
+
+    epsilon:
+        epsilon
+
+    B:
+        The number of eigenvalues to penalize.
+
+    alpha:
+        The spectral penalty weight.
+
+    eta: None, float
+        (Optional) An optional lower bound on the degrees.
+
+    weights: None, array-like, (B, )
+        Weights to put on the eigenvalues.
+
+    init_val:
+        Guess for the initial value. Note the ECOS solver does not currently
+        accept inital guesses.
+
+    obj_mult: float
+        Multiply the objective function by a constant. This does not change the problem, but can help some solvers find a solution.
+
+    """
 
     shape = Gamma.shape
     var = cp.Variable(shape=np.product(shape), pos=True)

@@ -9,9 +9,28 @@ from warnings import warn
 import cvxpy as cp
 
 
-def check_stopping_criteria(abs_diff, rel_diff, abs_tol=None, rel_tol=None):
+def check_stopping_criteria(abs_diff=None, rel_diff=None,
+                            abs_tol=None, rel_tol=None):
     """
+    Decides whether or not to stop an optimization algorithm if the relative and/or absolute difference stopping critera are met. If both abs_tol and rel_tol are not None, then will only stop if both conditions are met.
 
+    Parameters
+    ----------
+    abs_diff: float, None
+        The absolute difference in succesive loss functions.
+
+    rel_diff: float, None
+        The relative difference in succesive loss functions.
+
+    abs_tol: None, float
+        The absolute difference tolerance.
+
+    rel_tol: None, float
+        The relative difference tolerance.
+
+    Output
+    ------
+    stop: bool
     """
 
     if abs_tol is not None and abs_diff is not None and abs_diff <= abs_tol:
@@ -130,6 +149,42 @@ def get_cp_solver(prefs):
 
 def solve_problem_cp(var, objective, constraints,
                      cp_kws={}, warm_start=False, verbosity=0):
+    """
+    Solves a cvxpy problem that has already been steup.
+
+    Parameters
+    ----------
+    var:
+        The cvxpy variable.
+
+    objective:
+        The cvxpy objective function.
+
+    constraints: list
+        List of cvxpy constraints.
+
+    cp_kws: dict
+        Key word arguments to cvxpy.Problem().solve()
+
+    warm_start: bool
+        Whether to warm start the solver from an initial value provided through var.
+
+    verbosity: int
+        How much printout.
+
+    Output
+    ------
+    value, opt_val, prob
+
+    value: array-like
+        The solution value.
+
+    opt_val: float
+        The optimal value
+
+    prob:
+        The cvxpy problem.
+    """
 
     if cp_kws is None:
         cp_kws = {}
@@ -152,6 +207,20 @@ def solve_problem_cp(var, objective, constraints,
 
 def solve_problem_cp_backups(cp_kws_backups=None,
                              *args, **kwargs):
+    """
+
+    Same as solve_problem_cp() but allows for back up solvers in case the first one you tried fails..
+
+    Parameters
+    ----------
+    cp_kws_backups: list of dicts
+        List of solver key word argumenst.
+        Will try each solver in this list until one does not fail.
+
+    *args, **kwargs:
+        arguments to solve_problem_cp that remain the same for every solver.
+
+    """
 
     if cp_kws_backups is None:
         cp_kws_backups = [None]

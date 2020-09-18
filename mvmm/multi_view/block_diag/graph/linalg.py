@@ -3,7 +3,6 @@ Linear algebra utils for graphs e.g. adjacency matrix, Laplacians, etc
 """
 import numpy as np
 from scipy.sparse import diags
-from scipy.linalg import LinAlgError
 from sklearn.utils.extmath import svd_flip
 
 from mvmm.utils import safe_invert

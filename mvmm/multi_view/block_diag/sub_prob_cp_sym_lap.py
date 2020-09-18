@@ -25,7 +25,7 @@ def get_cp_problem_sym_lap(Gamma,
                            exclude_vdv_constr=False,
                            obj_mult=1):
     """
-    Sets up the bd_weights_ updatefor the symmetric Laplacian using cvxpy.
+    Sets up the bd_weights_ update for the symmetric Laplacian using cvxpy.
     This is Problem (41) from (Carmichael, 2020).
 
     min_D - sum_{k1, k2} Gamma_{k1, k2} log(epsilon + D_{k1, k2}) +

@@ -26,8 +26,6 @@ from mvmm.multi_view.block_diag.utils import get_lin_coef
 from mvmm.multi_view.block_diag.graph.bipt_spect_partitioning import \
     run_bipt_spect_partitioning
 
-# TODO-FEAT: n_blocks = 1
-
 
 class BlockDiagMVMM(MVMM):
 
@@ -45,8 +43,8 @@ class BlockDiagMVMM(MVMM):
                  random_state=None,
                  verbosity=0,
                  history_tracking=0,
+                 rel_epsilon=1e-2,
                  eval_weights=None,
-                 rel_eta=None,
                  eval_pen_base='guess_from_init',
                  eval_pen_incr=2,
                  eval_pen_decr=0.75,
@@ -55,11 +53,11 @@ class BlockDiagMVMM(MVMM):
                  init_pen_use_bipt_sp=False,
                  init_pen_K='default',
                  lap='sym',
-                 rel_epsilon=1e-2,
                  exclude_vdv_constr=False,
                  cp_kws={},  # {'abstol': 1e-3, 'reltol': 1e-3, 'feastol': 1e-9}
                  zero_thresh=1e-6,
-                 fine_tune_n_steps=200):
+                 fine_tune_n_steps=200,
+                 rel_eta=None):
 
         super().__init__(base_view_models=base_view_models,
                          max_n_steps=max_n_steps,
@@ -814,44 +812,61 @@ def get_cp_problem(lap='sym', **kwargs):
 BlockDiagMVMM.__doc__ = dedent("""\
 Block diagonally constrained multi-view mixture model.
 
-TODO-DOC
-
 Parameters
 ----------
+rel_epsilon: float
+    Value of epsilon on (0, 1) scale i.e. epsilon = np.product(n_view_components) * rel_epsilon
+
 base_view_models: list of mixture models
     Mixture models for each view. These should specify the number of view components.
 
-n_blocks: int
+n_blocks: int, None
+    Number of blocks for constraint.
 
-eval_weights:
+eval_weights: None, list of floats
+    (Optional) Weights for the spectral penalty.
 
-rel_eta: float
-
-eval_pen_base: float
+eval_pen_base: float or 'guess_from_init'
+    The initial spectral penalty weight.
+    If 'guess_from_init', will guess using the heuristic discussed in get_eval_pen_guess().
 
 eval_pen_incr: float
+    Multiplicative factor to increase eigenvalue penalty by if the inner EM loop has not found enough blocks.
 
 eval_pen_decr: float
+    Multiplicative factor to decrease eigenvalue penalty by if the inner EM loop has found too many blocks.
 
 n_pen_tries: int
+    Number of times we adjust the spectral penalty to attempt to find the requested number of blocks before giving up.
 
 init_pen_c: float
+    Multiplicative constant for get_eval_pen_guess()
 
 init_pen_use_bipt_sp: bool
+    Which method to use for get_eval_pen_guess()
 
-init_pen_K: str
+init_pen_K: str, int
+    Value of K in get_eval_pen_guess()
 
 lap: str
-
-rel_epsilon: float
+    Which Laplacian to use. Must be one of ['sym', 'un'].
 
 exclude_vdv_constr: bool
+    Whether or not to exclude the VDV == I constraint for the symmetric Laplacian. Excluding this constraint changes the problem, but can lead to faster computation.
 
 cp_kws: dict
+    Key word arguments to cvxpy.Problem().solve()
 
 zero_thresh: float
+    Zero threshold for determining the support of the bd_weights_.
 
-fine_tune_n_steps: int
+fine_tune_n_steps: int, None
+    How many EM steps to use to fine tune bd_weights_ after it has found the
+    support of bd_weights_.
+
+rel_eta: None, float
+    (Optional) Lower bound on the degrees. This is on the scale of (0, 1) i.e.
+    eta = sum(n_view_components) * rel_eta
 
 {em_param_docs}
 

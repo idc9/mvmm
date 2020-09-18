@@ -9,7 +9,43 @@ from mvmm.linalg_utils import svd_wrapper
 from mvmm.utils import safe_invert
 
 
+def run_bipt_spect_partitioning(X, n_blocks, kmeans_kws={}):
+    """
+    Runs Bipartie spectral partitioning on a matrix.
+
+    Dhillon, Inderjit. 2001. Co-clustering documents and words using Bipartite
+Spectral Graph Partitioning.
+
+    Parameters
+    ----------
+    X: array-like, (R, C)
+        The data matrix.
+
+    n_blocks: int
+        The number of blocks to partition the matix into.
+
+
+    kmeans_kws: dict
+        Key word arguments to sklearn.cluster.KMeans
+    """
+    if n_blocks == 1:
+        return np.zeros_like(X)
+
+    n_rows, n_cols = X.shape
+
+    Z = get_Z(X=X, K=n_blocks)
+
+    cl = KMeans(n_clusters=n_blocks, **kmeans_kws)
+    cl.fit(Z)
+    y_pred = cl.predict(Z)
+
+    comm_mat = to_comm_mat(y=y_pred, shape=X.shape)
+
+    return comm_mat
+
+
 def to_comm_mat(y, shape):
+
     n_rows, n_cols = shape
 
     row_pred = y[:n_rows]
@@ -21,8 +57,6 @@ def to_comm_mat(y, shape):
     for k in set(y):
         row_idxs = np.where(row_pred == k)[0]
         col_idxs = np.where(col_pred == k)[0]
-
-        # print(k, row_idxs, col_idxs)
 
         for r, c in product(row_idxs, col_idxs):
             comm_mat[r, c] = k
@@ -47,20 +81,3 @@ def get_Z(X, K=2):
                    diags(col_sums_inv_sqrt) @ V[:, 1:]])
 
     return Z
-
-
-def run_bipt_spect_partitioning(X, n_blocks, kmeans_kws={}):
-    if n_blocks == 1:
-        return np.zeros_like(X)
-
-    n_rows, n_cols = X.shape
-
-    Z = get_Z(X=X, K=n_blocks)
-
-    cl = KMeans(n_clusters=n_blocks, **kmeans_kws)
-    cl.fit(Z)
-    y_pred = cl.predict(Z)
-
-    comm_mat = to_comm_mat(y=y_pred, shape=X.shape)
-
-    return comm_mat
