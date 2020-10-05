@@ -10,7 +10,7 @@ from sklearn.base import BaseEstimator, MetaEstimatorMixin
 from mvmm.utils import get_seeds
 from mvmm.multi_view.utils import linspace_zero_to, \
     expspace_zero_to, polyspace_zero_to
-from mvmm.multi_view.block_diag.graph.linalg import geigh_sym_laplacian_bp
+from mvmm.multi_view.block_diag.graph.linalg import geigh_Lsym_bp_smallest
 from mvmm.multi_view.block_diag.utils import asc_sort
 from mvmm.clustering_measures import unsupervised_cluster_scores, \
     several_unsupervised_cluster_scores, MEASURE_MIN_GOOD
@@ -224,9 +224,9 @@ class SpectralPenSearchByBlockMVMM(MetaEstimatorMixin, BaseEstimator,
                     # compute adaptive weights
                     if self.eval_weights == 'adapt':
 
-                        evals = geigh_sym_laplacian_bp(X=self.bd_weights_,
+                        evals = geigh_Lsym_bp_smallest(X=self.bd_weights_,
                                                        rank=K,
-                                                       end='smallest',
+                                                       zero_tol=1e-10,
                                                        method='tsym')
 
                         # deal with 0 evals by artificially setting

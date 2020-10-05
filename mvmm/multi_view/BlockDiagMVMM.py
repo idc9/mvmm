@@ -13,7 +13,7 @@ from mvmm.utils import get_seeds
 from mvmm.multi_view.block_diag.utils import asc_sort
 from mvmm.linalg_utils import eigh_wrapper
 from mvmm.opt_utils import solve_problem_cp
-from mvmm.multi_view.block_diag.graph.linalg import geigh_sym_laplacian_bp,\
+from mvmm.multi_view.block_diag.graph.linalg import geigh_Lsym_bp_smallest,\
     get_unnorm_laplacian_bp
 from mvmm.multi_view.block_diag.graph.bipt_community import community_summary,\
     get_nonzero_block_mask
@@ -122,9 +122,15 @@ class BlockDiagMVMM(MVMM):
 
             if self.n_blocks is not None and \
                     len(self.eval_weights) != self.n_blocks:
-                raise ValueError("Invalid value for eval_weights: {}."
+                raise ValueError("Invalid length for eval_weights: {}. "
                                  "Must have length == n_blocks"
-                                 .format(self.eval_weights))
+                                 .format(len(self.eval_weights)))
+
+        if self.n_blocks is not None and \
+                self.n_blocks > min(self.n_view_components):
+            raise ValueError("Invalid value for n_blocks: {}."
+                             "Must have n_blocks <= min(n_view_components)"
+                             .format(self.n_blocks))
 
         if self.fine_tune_n_steps is not None and self.fine_tune_n_steps <= 0:
             raise ValueError("Invalid value for fine_tune_n_steps: {}."
@@ -505,10 +511,6 @@ class BlockDiagMVMM(MVMM):
             out['loss_val'] = out['obs_nll']
             return out
 
-        # obs_nll = - self.score(X)
-        # log_probs = self.log_probs(X)
-        # obs_nll = - logsumexp(log_probs, axis=1).mean()
-
         if self.n_blocks is not None:
             B = self.n_blocks
         else:
@@ -521,9 +523,9 @@ class BlockDiagMVMM(MVMM):
 
             if self.lap == 'sym':
 
-                evals, _ = geigh_sym_laplacian_bp(X=self.bd_weights_,
+                evals, _ = geigh_Lsym_bp_smallest(X=self.bd_weights_,
                                                   rank=B,
-                                                  end='smallest',
+                                                  zero_tol=1e-10,
                                                   method='tsym')
 
             elif self.lap == 'un':
@@ -588,9 +590,9 @@ class BlockDiagMVMM(MVMM):
 
             if self.lap == 'sym':
 
-                evals, eig_var = geigh_sym_laplacian_bp(X=self.bd_weights_,
+                evals, eig_var = geigh_Lsym_bp_smallest(X=self.bd_weights_,
                                                         rank=B,
-                                                        end='smallest',
+                                                        zero_tol=1e-10,
                                                         method='tsym')
 
             elif self.lap == 'un':

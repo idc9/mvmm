@@ -36,7 +36,7 @@ from mvmm.multi_view.toy_data import sample_gmm, setup_grid_mean_view_params
 
 Pi_true = get_01_block_diag(block_shapes=[(2, 2)] * 5)
 Pi_true /= Pi_true.sum()
-n_view_components = Pi_true.shape
+n_view_components = Pi_true.shape  # there are 10 clusters in each view
 
 clust_param_config = {'n_features': [1, 1],
                       'cluster_std': .25,  # how noisey each cluster is

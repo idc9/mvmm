@@ -5,6 +5,7 @@ import networkx as nx
 import numpy as np
 from itertools import product
 from copy import deepcopy
+import pandas as pd
 
 from mvmm.multi_view.block_diag.graph.linalg import get_adjmat_bp
 
@@ -40,7 +41,7 @@ def get_nonzero_block_mask(X, tol=1e-6):
 
     entrywise_mask = abs(X) > tol
 
-    C = get_comm_mat(entrywise_mask)
+    C = get_block_mat(entrywise_mask)
 
     if np.mean(np.isnan(C)) == 1:
         n_blocks = 1
@@ -67,16 +68,21 @@ def get_nonzero_block_mask(X, tol=1e-6):
     return non_zero_block_mask, C, n_blocks, n_zero_cols, n_zero_rows
 
 
-def get_comm_mat(A):
+def get_block_mat(A):
     """
+    Gets the support of the blocks for a matrix A that is block diagonal up to permutations of the rows and columns.
 
     Parameters
     ----------
-    A: (n_clusters_0, n_clusters_1)
+    A: (n_rows, n_cols)
+        The matrix.
 
     Output
     ------
-    C: (n_clusters_0, n_clusters_1)
+    C: (n_rows, n_cols)
+        The matrix whose entries indicate which block they belong to.
+        i.e. C_{ij} = k if entry A_{ij} belongs to the kth block.
+        C_{ij} = np.nan if A_{ij} does not belong to a block.
     """
     node_labels = ['row_{}'.format(i) for i in range(A.shape[0])] + \
         ['col_{}'.format(i) for i in range(A.shape[1])]
@@ -110,6 +116,31 @@ def get_comm_mat(A):
                     comm_mat[int(idx0), int(idx1)] = block_idx
                 else:
                     comm_mat[int(idx1), int(idx0)] = block_idx
+
+    # do some formatting
+    if np.isnan(np.nanmax(comm_mat)):
+        # if there is one community just make this the zeor matrox
+        comm_mat = np.zeros_like(comm_mat)
+        comm_mat = comm_mat.astype(float)  # make consistent with more than one community
+
+    else:
+        n_blocks = int(np.nanmax(comm_mat)) + 1
+        # get block sizes
+        sizes = {}
+        for k in range(int(n_blocks)):
+            sizes[k] = (comm_mat == k).sum()
+
+        # reorder blocks by their sizes
+        sizes = pd.Series(sizes)
+        sizes = sizes.sort_values()
+        new_idx2entries = {}
+        for k_new in range(n_blocks):
+            k_old = sizes.index[k_new]
+            new_idx2entries[k_new] = comm_mat == k_old
+
+        for k_new in new_idx2entries.keys():
+            comm_mat[new_idx2entries[k_new]] = k_new
+
     return comm_mat
 
 
@@ -130,7 +161,7 @@ def community_summary(Pi, zero_thresh=0):
 
     """
     non_zero_mask = Pi > zero_thresh
-    C = get_comm_mat(non_zero_mask)
+    C = get_block_mat(non_zero_mask)
 
     n_communities = int(np.nanmax(C)) + 1
 

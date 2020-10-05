@@ -19,6 +19,7 @@ class BaseGridSearch(MetaEstimatorMixin, BaseEstimator, metaclass=ABCMeta):
                  select_metric='bic',
                  metrics2compute=['aic', 'bic'],
                  n_jobs=None,
+                 backend=None,
                  verbose=0,
                  pre_dispatch='2*n_jobs'):
 
@@ -27,6 +28,7 @@ class BaseGridSearch(MetaEstimatorMixin, BaseEstimator, metaclass=ABCMeta):
         self.select_metric = select_metric
         self.metrics2compute = metrics2compute
         self.n_jobs = n_jobs
+        self.backend = backend
         self.verbose = verbose
         self.pre_dispatch = pre_dispatch
 
@@ -56,6 +58,7 @@ class BaseGridSearch(MetaEstimatorMixin, BaseEstimator, metaclass=ABCMeta):
         start_time = time()
         if self.n_jobs is not None:
             parallel = Parallel(n_jobs=self.n_jobs,
+                                backend=self.backend,
                                 verbose=self.verbose,
                                 pre_dispatch=self.pre_dispatch)
 
