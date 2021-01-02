@@ -2,7 +2,8 @@
 
 **author**: [Iain Carmichael](https://idc9.github.io/)
 
-This package implements the multi-view clustering algorithms presented in (Carmichael, 2020). The multi-view data setting means a fixed set of observations (e.g. patients) and multiple sets of variables (e.g. clinical as well as genomic features). The multi-view mixture model (MVMM) is a parametric clustering model (Bickel and Scheffer, 2004) based on two assumptions:
+This package implements the multi-view clustering algorithms presented in ["Learning Sparsity and Block Diagonal Structure in Multi-View
+Mixture Models"](https://arxiv.org/pdf/2012.15313.pdf). The multi-view data setting means a fixed set of observations (e.g. patients) and multiple sets of variables (e.g. clinical as well as genomic features). The multi-view mixture model (MVMM) is a parametric clustering model (Bickel and Scheffer, 2004) based on two assumptions:
 
 1. Marginally, each view follows a mixture model i.e. there are V sets of clusters for a V view dataset.
 2. The views are independent given the marginal view cluster memberships.
@@ -104,7 +105,7 @@ bug fixes, spelling errors, new features, etc.
 @article{carmichael2020learning,<br />
 title={Learning sparsity and block diagonal structure in multi-view mixture models},<br />
 author={Carmichael, Iain},<br />
-journal={arXiv preprint arXiv: TODO},<br />
+journal={arXiv preprint arXiv: 2012.15313},<br />
 year={2020}<br />
 }
 
@@ -112,4 +113,4 @@ year={2020}<br />
 
 Bickel, S. and Scheffer, T., 2004. Multi-view clustering. In ICDM (Vol. 4, No. 2004, pp. 19-26).
 
-Carmichael, I. 2020. Learning sparsity and block diagonal structure in multi-view mixture models. Arxiv preprint.
+Carmichael, I. 2020. [Learning sparsity and block diagonal structure in multi-view mixture models](https://arxiv.org/pdf/2012.15313.pdf). Arxiv preprint.
